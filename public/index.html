@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=<device-width>, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <input type="file" id="inputFile">
+    <button type="button" id="btnUpload">Upload</button>
+    <button type="button" id="btnSave">Save</button>
+    <br>
+    <br>
+    <textarea style="width:300px; height: 150px;" id="resultText" placeholder="Your PDF text pops up here"></textarea>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script>
+        const inputFile = document.getElementById('inputFile')
+        const btnSave = document.getElementById('btnSave')
+        const resultText = document.getElementById('resultText')
+        const btnUpload = document.getElementById('btnUpload')
+            
+            
+        let extractedText = null
+            
+        const formData = new FormData() 
+            
+        btnUpload.addEventListener('click', () => {
+            formData.append('pdfFile', inputFile.files[0])
+            
+            fetch("/extract-text", {
+                method: 'post',
+                body: formData
+            }).then(response => {
+                //server side will respond with text
+                return response.text()
+            }).then(extractedText => {
+                resultText.value = extractedText.trim()
+            })
+        })
+        
+        btnSave.addEventListener('click', () => {
+            const originalFileName = inputFile.files[0].name
+            const newFileName = originalFileName.replace(/\.[^/.]+$/, "") + ".txt"
+            const textToSave = resultText.value.trim()
+            if(textToSave) {
+                const blob = new Blob([textToSave], { type: 'text/plain;charset=utf-8' })
+                saveAs(blob, `${newFileName}`)
+                
+            } else {
+                console.error('No text to save')
+            }
+        })
+    </script>
+</body>
+</html>
